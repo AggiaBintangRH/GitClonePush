@@ -1,0 +1,3 @@
+# Developer-only build configuration. End users must never edit this file.
+# Copy this value into the developer machine's ignored local.properties.
+github.clientId=YOUR_GITHUB_OAUTH_CLIENT_ID
