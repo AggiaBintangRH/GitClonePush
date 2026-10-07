@@ -9,5 +9,7 @@ interface AuthRepository {
     fun observeAuthState(): Flow<AuthState>
     suspend fun beginLogin(): Result<AuthLaunchRequest>
     suspend fun completeLogin(callbackUri: Uri): Result<Unit>
+    /** Abandons only the pending OAuth transaction, never an authenticated session. */
+    suspend fun cancelLogin()
     suspend fun logout()
 }

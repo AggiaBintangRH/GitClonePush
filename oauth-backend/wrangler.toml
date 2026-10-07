@@ -1,0 +1,6 @@
+name = "gitclonepush-oauth"
+main = "src/index.ts"
+compatibility_date = "2026-10-05"
+
+[vars]
+GITHUB_REDIRECT_URI = "https://aggiabintangrh.github.io/HomePageGitClonePush/oauth/callback.html"

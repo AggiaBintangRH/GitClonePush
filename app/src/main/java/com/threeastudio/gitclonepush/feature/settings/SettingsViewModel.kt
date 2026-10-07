@@ -2,19 +2,55 @@ package com.threeastudio.gitclonepush.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.threeastudio.gitclonepush.core.model.GitAuthorIdentity
-import com.threeastudio.gitclonepush.domain.repository.GitAuthorIdentityStore
+import com.threeastudio.gitclonepush.domain.repository.AuthRepository
+import com.threeastudio.gitclonepush.domain.repository.GitAuthorIdentityReader
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
-data class SettingsUiState(val authorName: String = "", val authorEmail: String = "", val saved: Boolean = false)
-class SettingsViewModel(private val store: GitAuthorIdentityStore) : ViewModel() {
+data class SettingsUiState(
+    val authorName: String = "",
+    val authorEmail: String = "",
+    val isLoadingIdentity: Boolean = true,
+    val isSigningOut: Boolean = false,
+    val errorMessage: String? = null
+)
+
+class SettingsViewModel(
+    private val identityReader: GitAuthorIdentityReader,
+    private val authRepository: AuthRepository
+) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
-    init { viewModelScope.launch { store.read()?.let { _uiState.value = SettingsUiState(it.name, it.email) } } }
-    fun updateName(value: String) { _uiState.value = _uiState.value.copy(authorName = value, saved = false) }
-    fun updateEmail(value: String) { _uiState.value = _uiState.value.copy(authorEmail = value, saved = false) }
-    fun save() = viewModelScope.launch { val state = _uiState.value; if (state.authorName.isNotBlank() && state.authorEmail.isNotBlank()) { store.write(GitAuthorIdentity(state.authorName, state.authorEmail)); _uiState.value = state.copy(saved = true) } }
+
+    init {
+        viewModelScope.launch {
+            identityReader.observe().collect { identity ->
+                _uiState.value = _uiState.value.copy(
+                    authorName = identity?.name.orEmpty(),
+                    authorEmail = identity?.email.orEmpty(),
+                    isLoadingIdentity = false
+                )
+            }
+        }
+    }
+
+    fun signOut() {
+        if (_uiState.value.isSigningOut) return
+        _uiState.value = _uiState.value.copy(isSigningOut = true, errorMessage = null)
+        viewModelScope.launch {
+            try {
+                authRepository.logout()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                _uiState.value = _uiState.value.copy(errorMessage = "Could not sign out. Please try again.")
+            } finally {
+                _uiState.value = _uiState.value.copy(isSigningOut = false)
+            }
+        }
+    }
 }

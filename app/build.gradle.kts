@@ -25,6 +25,7 @@ android {
 
     buildTypes {
         release {
+            isDebuggable = false
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -33,6 +34,7 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -49,13 +51,19 @@ android {
         .orElse(providers.environmentVariable("GITHUB_CLIENT_ID"))
         .orElse(localProperties.getProperty("github.clientId", ""))
         .get()
+    val oauthBackendBaseUrl = providers.gradleProperty("oauth.backendBaseUrl")
+        .orElse(providers.environmentVariable("OAUTH_BACKEND_BASE_URL"))
+        .orElse(localProperties.getProperty("oauth.backendBaseUrl", ""))
+        .get()
     buildTypes.configureEach {
         buildConfigField("String", "GITHUB_CLIENT_ID", "\"$githubClientId\"")
-        buildConfigField("String", "GITHUB_REDIRECT_URI", "\"gitclonepush://oauth/callback\"")
+        buildConfigField("String", "GITHUB_REDIRECT_URI", "\"https://aggiabintangrh.github.io/HomePageGitClonePush/oauth/callback.html\"")
+        buildConfigField("String", "OAUTH_BACKEND_BASE_URL", "\"$oauthBackendBaseUrl\"")
     }
 }
 
 dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.nio)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -71,6 +79,7 @@ dependencies {
     implementation(libs.jgit)
     implementation(libs.kotlinx.coroutines.android)
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

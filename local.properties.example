@@ -1,3 +1,5 @@
 # Developer-only build configuration. End users must never edit this file.
 # Copy this value into the developer machine's ignored local.properties.
 github.clientId=YOUR_GITHUB_OAUTH_CLIENT_ID
+# Developer-only OAuth backend URL. Leave empty until the Worker is deployed.
+oauth.backendBaseUrl=https://YOUR-WORKER.workers.dev
